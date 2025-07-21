@@ -16,5 +16,3 @@ Simply type your text into the input field, and the generator will instantly con
 * **Character Counter:** Keeps track of your input length for convenience.
 
 ---
-
-Feel free to deploy this tool using GitHub Pages for easy access!
