@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to String Converter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="icon.ico">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #2c3e50; /* Dark blue-gray background */
+            color: #ecf0f1; /* Light text color */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #34495e; /* Slightly lighter blue-gray for container */
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+        }
+        h1 {
+            color: #3498db; /* Blue heading */
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px; /* Reduced margin to bring counter closer */
+            font-weight: 400;
+            color: #bdc3c7; /* Lighter gray for labels */
+        }
+        input[type="text"] {
+            width: calc(100% - 24px); /* Account for padding and border */
+            padding: 12px;
+            margin-bottom: 10px; /* Reduced margin to bring counter closer */
+            border: 1px solid #5d7c9a; /* Border matching theme */
+            border-radius: 5px;
+            font-size: 16px;
+            background-color: #2c3e50; /* Dark input background */
+            color: #ecf0f1; /* Light input text */
+            box-sizing: border-box; /* Include padding and border in width */
+        }
+        input[type="text"]::placeholder {
+            color: #8b99a6; /* Placeholder text color */
+        }
+        .char-counter {
+            font-size: 0.9em;
+            color: #95a5a6;
+            text-align: right;
+            margin-bottom: 20px; /* Space between counter and button */
+        }
+        button { /* This button style is kept for reference, but the button HTML element is removed */
+            background-color: #3498db; /* Blue button */
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 17px;
+            font-weight: 700;
+            transition: background-color 0.3s ease;
+        }
+        button:hover { /* This button style is kept for reference, but the button HTML element is removed */
+            background-color: #2980b9; /* Darker blue on hover */
+        }
+        textarea {
+            width: calc(100% - 24px); /* Account for padding and border */
+            height: 220px;
+            padding: 12px;
+            border: 1px solid #5d7c9a; /* Border matching theme */
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre;
+            overflow: auto;
+            margin-top: 25px;
+            background-color: #2c3e50; /* Dark textarea background */
+            color: #ecf0f1; /* Light textarea text */
+            line-height: 1.6; /* More space between lines */
+            box-sizing: border-box;
+            resize: vertical; /* Allow vertical resizing */
+            /* Textarea is always visible, but its content is dynamic */
+        }
+        .note {
+            font-size: 0.85em;
+            color: #95a5a6; /* Muted gray for notes */
+            margin-top: 20px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Text to String Name</h1>
+
+        <label for="inputText">Enter your name or text:</label>
+        <input type="text" id="inputText" placeholder="e.g., Your Name" maxlength="16">
+        <div class="char-counter" id="charCount">0 / 16 Characters</div>
+
+        <textarea id="outputString" readonly></textarea>
+
+        <p class="note">
+            The entered text will be converted to UTF-16 (Big Endian) and inserted into the specified string template.
+            Any remaining space will be filled with '00000000'. | Made by vyrval
+        </p>
+    </div>
+
+    <script>
+        const inputField = document.getElementById('inputText');
+        const charCountDisplay = document.getElementById('charCount');
+        const outputStringArea = document.getElementById('outputString');
+        const MAX_CHARS = 16; // Maximum characters allowed for the name
+
+        // Base template
+        const BASE_TEMPLATE = [
+            "30000000 106EB0A4",
+            "10600000 1D000000",
+            "31000000 0000008C",
+            "01100020 00000000",
+            "XXXXYYYY ZZZZWWWW", // This is where the dynamic part will be inserted
+            "VVVVUUUU TTTTSSSS",
+            "RRRRQQQQ PPPPOOOO",
+            "NNNNMMMM LLLLKKKK",
+            "00000000 000000FF"
+        ];
+
+        // Function to convert text to UTF-16 and update the output
+        function convertAndInsert() {
+            let currentText = inputField.value;
+
+            // If the input field is empty, clear the output textarea and stop.
+            // This makes sure the output box is visible but empty when no text is entered.
+            if (currentText.length === 0) {
+                outputStringArea.value = ''; // Clear the output box content
+                charCountDisplay.textContent = `0 / ${MAX_CHARS} Characters`; // Reset counter
+                return; // Exit the function early
+            }
+
+            // Truncate input if it exceeds MAX_CHARS
+            if (currentText.length > MAX_CHARS) {
+                currentText = currentText.substring(0, MAX_CHARS);
+                inputField.value = currentText; // Update the input field value
+            }
+
+            // Update character counter
+            charCountDisplay.textContent = `${currentText.length} / ${MAX_CHARS} Characters`;
+
+            const utf16HexArray = [];
+
+            // Convert each character to its UTF-16 (BE) hex representation
+            for (let i = 0; i < currentText.length; i++) {
+                const charCode = currentText.charCodeAt(i);
+                // PadStart to ensure each hex number is 4 digits (e.g., "6E" becomes "006E")
+                utf16HexArray.push(charCode.toString(16).padStart(4, '0').toUpperCase());
+            }
+
+            // Join the UTF-16 hex values to form the "XXXXYYYY..." part
+            let dynamicPart = utf16HexArray.join('');
+
+            // Create a mutable copy of the base template for modifications
+            let template = [...BASE_TEMPLATE];
+
+            // Target length of the dynamic part in hex characters (4 lines * 16 hex chars/line = 64 hex chars)
+            const maxDynamicLength = 64;
+
+            // Add zeros if the text is shorter than the placeholder
+            if (dynamicPart.length < maxDynamicLength) {
+                dynamicPart += '0'.repeat(maxDynamicLength - dynamicPart.length);
+            } else if (dynamicPart.length > maxDynamicLength) {
+                // This scenario should be rare now due to input truncation, but kept for robustness
+                dynamicPart = dynamicPart.substring(0, maxDynamicLength);
+            }
+
+            // Split the dynamic part into the four lines
+            const lines = [];
+            for (let i = 0; i < dynamicPart.length; i += 16) {
+                const linePart = dynamicPart.substring(i, i + 16);
+                lines.push(linePart.substring(0, 8) + " " + linePart.substring(8, 16));
+            }
+
+            // Replace the placeholders in the template lines
+            template[4] = lines[0] || "00000000 00000000";
+            template[5] = lines[1] || "00000000 00000000";
+            template[6] = lines[2] || "00000000 00000000";
+            template[7] = lines[3] || "00000000 00000000";
+
+            // Display the result in the textarea
+            outputStringArea.value = template.join('\n');
+        }
+
+        // Add event listener to input field for real-time updates
+        // Both character counting and conversion happen on 'input' event
+        inputField.addEventListener('input', convertAndInsert);
+
+        // Initial call on page load: ensures the textarea is empty and counter is reset
+        convertAndInsert();
+    </script>
+
+</body></html>
